@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Blue Origin Flashcards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;height:100dvh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#0f172a;color:#f1f5f9}
+body{display:flex;flex-direction:column}
+
+.header{flex-shrink:0;padding:14px 16px 10px;padding-top:max(14px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155}
+.header-title{font-size:13px;font-weight:600;color:#94a3b8}
+.progress{font-size:14px;font-weight:700;color:#38bdf8}
+
+.bar{height:3px;background:#1e293b;flex-shrink:0}
+.fill{height:100%;background:#38bdf8;width:3%;transition:width .25s ease}
+
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;position:relative}
+
+.card-wrap{width:100%;max-width:420px;height:min(58vh,480px);perspective:1000px}
+.card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s ease;cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;padding:22px 20px;display:flex;flex-direction:column;border:1px solid #334155;background:#1e293b;box-shadow:0 10px 30px rgba(0,0,0,.4);overflow:hidden}
+.back{transform:rotateY(180deg);background:#0f172a}
+
+.label{font-size:11px;font-weight:700;letter-spacing:1.5px;color:#38bdf8;margin-bottom:14px;text-transform:uppercase}
+.q{font-size:22px;font-weight:700;line-height:1.3;color:#f8fafc;flex:1;display:flex;align-items:center;overflow-y:auto}
+.a{font-size:15px;line-height:1.55;color:#e2e8f0;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.a p{margin-bottom:11px}
+.a p:last-child{margin-bottom:0}
+.a b{color:#38bdf8;font-weight:700}
+.hint{font-size:12px;color:#64748b;text-align:center;margin-top:12px;flex-shrink:0}
+
+.controls{flex-shrink:0;padding:12px 16px 18px;padding-bottom:max(18px,env(safe-area-inset-bottom));display:flex;gap:12px;justify-content:center;border-top:1px solid #334155}
+.btn{border:none;border-radius:14px;font-size:16px;font-weight:600;padding:15px 16px;min-height:52px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.nav{background:#1e293b;color:#f1f5f9;border:1px solid #334155;width:72px}
+.flip{background:#0ea5e9;color:#fff;flex:1;max-width:200px}
+.btn:disabled{opacity:.3;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-title">Blue Origin · Interview Prep</div>
+  <div class="progress" id="prog">1 / 31</div>
+</div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+
+<div class="stage" id="stage">
+  <div class="card-wrap">
+    <div class="card" id="card">
+      <div class="face front">
+        <div class="label">Question</div>
+        <div class="q" id="q">Loading…</div>
+        <div class="hint">Tap card to flip</div>
+      </div>
+      <div class="face back">
+        <div class="label">Answer</div>
+        <div class="a" id="a"></div>
+        <div class="hint">Tap to flip back</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn nav" id="prev">←</button>
+  <button class="btn flip" id="flip">Flip</button>
+  <button class="btn nav" id="next">→</button>
+</div>
+
+<script>
+const cards = [
+{q:"Tell me about yourself.",a:"<p>I’ve spent over 20 years in aerospace manufacturing, with the last 10 years at Airbus. I joined Airbus in 2016 as a Manufacturing Engineer and progressed through Supervisor, Manager, and now Head of A220 Manufacturing Engineering.</p><p>Today I lead a 40-person Manufacturing Engineering organization, including five direct-report supervisors. My organization supports Industrial Engineering, Floor Support, Change Management, Jigs & Tools, and Standard Line Balancing for the A220 Final Assembly Line.</p><p>Throughout my career I’ve focused on improving manufacturing performance while developing people. One accomplishment I’m especially proud of was leading Manufacturing Engineering through our production ramp, reducing aircraft movement cadence from 21 days to 6 days. I also manage a $12 million budget, delivered $750,000 in annual savings, and created competency programs that helped develop engineers into supervisors.</p>"},
+{q:"Why Blue Origin?",a:"<p>I’ve had an incredible career at Airbus, but I’m looking for an opportunity to apply my experience to an entirely new challenge.</p><p>What excites me about Blue Origin is the opportunity to build manufacturing capability for human-rated lunar vehicles. I enjoy developing organizations, improving manufacturing systems, and helping teams solve difficult problems. Combining that with Blue Origin’s mission makes this an opportunity I’m genuinely excited about.</p>"},
+{q:"What is your leadership style?",a:"<p>My leadership style is centered around developing people, setting clear expectations, and creating accountability.</p><p>I believe leaders should spend time where the work is happening, understand the challenges firsthand, and remove obstacles that prevent success.</p><p>I also believe leadership is measured by the people you develop. I built competency programs and have mentored multiple Manufacturing Engineers into leadership positions. In fact, all five of my current supervisors started as Manufacturing Engineers on my team.</p>"},
+{q:"Tell me about a time you transformed an organization.",a:"<p>The largest transformation I led was supporting the Airbus A220 production ramp.</p><p>Manufacturing Engineering had to fundamentally change how we supported production. We reorganized engineering priorities, improved work sequencing, strengthened cross-functional collaboration, and removed manufacturing bottlenecks.</p><p>The result was reducing aircraft movement cadence from 21 days to 6 days while maintaining safety and quality. That experience taught me how important organizational alignment is when scaling production.</p>"},
+{q:"How do you build high-performing engineering teams?",a:"<p>I believe it starts with hiring strong people, setting clear expectations, and investing in development.</p><p>I created competency programs because I wanted engineers to understand what skills they needed to grow.</p><p>I also believe in giving people meaningful responsibility instead of solving every problem myself. Several of my current supervisors grew from engineers on my team, and seeing that development has been one of the most rewarding parts of my career.</p>"},
+{q:"How do you work across a matrix organization?",a:"<p>Most manufacturing problems require multiple organizations working together.</p><p>Every day I partner with Production, Quality, Supply Chain, Program Management, and Design Engineering.</p><p>My role is to align everyone around common objectives, use data to guide decisions, and make sure every organization understands how their decisions affect the overall production system.</p>"},
+{q:"Tell me about a difficult leadership decision.",a:"<p>During our production ramp there were periods when demand exceeded available engineering resources.</p><p>We couldn’t support every request immediately, so I worked with Production, Program Management, and my leadership team to prioritize based on safety, production impact, and customer commitments.</p><p>I communicated those priorities clearly, explained the reasoning behind the decisions, and adjusted as conditions changed. I believe transparency is critical when making difficult decisions.</p>"},
+{q:"How do you handle conflict between organizations?",a:"<p>I try to separate people from the problem.</p><p>Usually Engineering and Operations have the same objective but different perspectives.</p><p>I focus on understanding each organization’s constraints, bringing everyone back to the common goal, and using facts and data instead of opinions to drive decisions.</p>"},
+{q:"What are you most proud of?",a:"<p>Without question, developing people.</p><p>The production improvements and cost savings are important, but what I’m most proud of is seeing engineers I hired and mentored become successful leaders.</p><p>Building competency programs and watching all five of my current supervisors grow from Manufacturing Engineers into leadership roles has been incredibly rewarding.</p>"},
+{q:"Why should we hire you?",a:"<p>I believe I bring a combination of manufacturing leadership, organizational development, and operational execution that aligns well with this role.</p><p>I’ve led engineering organizations through significant production growth, managed multimillion-dollar budgets, improved manufacturing performance, and developed future leaders.</p><p>Most importantly, I enjoy building organizations that continue improving long after the immediate problem has been solved. I believe that’s the type of leadership Blue Origin is looking for as it scales lunar manufacturing.</p>"},
+{q:"Why are you leaving Airbus?",a:"<p>I’ve had a fantastic career at Airbus and am grateful for the opportunities I’ve had. I’m looking for a new challenge where I can apply what I’ve learned while continuing to grow. The opportunity to help build manufacturing capability for lunar exploration is incredibly compelling.</p>"},
+{q:"What would your team say about you?",a:"<p>I think they’d say I’m approachable, I set high expectations, I genuinely care about developing people, and I hold everyone—including myself—accountable for results.</p>"},
+{q:"Tell me about a failure.",a:"<p>Early in my management career I sometimes took on too much myself because I wanted to ensure things were done well. Over time I realized that approach limited my team’s growth. I learned that developing leaders means trusting them with meaningful responsibility, coaching them through challenges, and allowing them to learn. That shift has made my organization much stronger.</p>"},
+{q:"Tell me about a difficult program.",a:"<p>The most significant program challenge I’ve led was the A220 production ramp.</p><p><b>Situation:</b> We needed to dramatically increase production rate while maintaining safety and quality.</p><p><b>Challenges:</b> Manufacturing Engineering had to fundamentally change how we supported the line — work sequencing, priorities, cross-functional collaboration, and bottleneck removal.</p><p><b>My Leadership:</b> I reorganized engineering priorities, strengthened collaboration with Production and Quality, and focused the team on the constraints that actually limited aircraft movement.</p><p><b>Results:</b> We reduced aircraft movement cadence from 21 days to 6 days.</p><p><b>Lesson:</b> The biggest lesson I learned was that scaling production isn’t about working harder—it’s about building systems and developing people that can sustain the pace.</p>"},
+{q:"How do you manage competing priorities?",a:"<p>I start by making sure everyone understands the overall objective. Once the mission is clear, I evaluate priorities through four lenses: safety, quality, schedule, and cost.</p><p>Not every problem deserves immediate attention, so I focus on the issues that present the greatest risk to the program. I involve the right stakeholders early, use data instead of assumptions, and communicate the rationale behind decisions so everyone understands why we’re prioritizing one issue over another.</p>"},
+{q:"How do you influence without authority?",a:"<p>Influence starts with trust. People are much more willing to support a decision when they know you’ve listened to their perspective and understand their challenges.</p><p>I focus on building relationships before I need them. When disagreements arise, I bring people together around the common objective instead of defending functional interests. I use data, ask questions, and work toward solutions that benefit the overall program.</p>"},
+{q:"What risks worry you most?",a:"<p>The biggest risks are usually the ones you don’t recognize early enough. Technical risks are important, but I pay equal attention to organizational risks—communication breakdowns, unclear priorities, resource constraints, and decisions made without cross-functional alignment.</p><p>Most program issues don’t happen overnight. They develop over time, which is why visibility, communication, and early risk identification are critical.</p>"},
+{q:"How do you build manufacturing organizations?",a:"<p>I build organizations around clear ownership and accountability. Every team should understand its mission, how success is measured, and how its work contributes to the larger program.</p><p>I invest heavily in leaders because they multiply the effectiveness of the organization. Processes are important, but people execute the processes. My goal is to build an organization that continues performing well without depending on one individual.</p>"},
+{q:"How do you ramp production?",a:"<p>A successful production ramp starts long before the first unit reaches the line. It begins with manufacturable designs, capable processes, effective tooling, trained people, and reliable metrics.</p><p>During the ramp, I focus on identifying constraints early, removing bottlenecks systematically, and standardizing successful practices. Every increase in production should be sustainable, not just achievable once.</p>"},
+{q:"What metrics matter?",a:"<p>I group them into five categories:</p><p><b>Safety:</b> Recordables, Near misses</p><p><b>Quality:</b> First-pass yield, Escapes, Rework</p><p><b>Delivery:</b> Schedule adherence, Takt attainment, Cycle time</p><p><b>Productivity:</b> Labor efficiency, Constraint utilization</p><p><b>People:</b> Training completion, Retention, Engagement</p><p>Metrics should drive conversations, not simply populate dashboards.</p>"},
+{q:"How do you know a factory is healthy?",a:"<p>A healthy factory is predictable. Safety performance is strong, quality issues are addressed quickly, production meets commitments, engineering changes flow efficiently, and problems are solved at the appropriate level.</p><p>I also pay close attention to what happens on the shop floor. Are supervisors coaching? Are operators engaged? Are issues escalating appropriately? Those indicators often tell you more than a report.</p>"},
+{q:"What would your first 90 days look like?",a:"<p><b>Days 1–30 (Listen):</b> Meet everyone, walk the floor, understand risks, and understand the culture.</p><p><b>Days 31–60 (Validate):</b> Validate priorities, identify quick wins, and build relationships.</p><p><b>Days 61–90 (Execute):</b> Develop strategy, align the organization, and begin executing improvements.</p>"},
+{q:"What should Manufacturing Engineering own?",a:"<p>Manufacturing Engineering owns the bridge between design intent and production execution.</p><p>That includes manufacturing planning, process development, tooling strategy, work instructions, DFM, production support, industrial engineering, and continuous improvement. Ultimately, Manufacturing Engineering is responsible for ensuring designs can be built safely, repeatedly, efficiently, and with the required quality.</p>"},
+{q:"How do you approach Design for Manufacturability (DFM)?",a:"<p>DFM isn’t an activity—it should be part of the culture. Manufacturing Engineering needs to be involved as early as possible because the cost of change increases dramatically later in development.</p><p>The goal isn’t to make engineering compromise innovation; it’s to find solutions that satisfy both design intent and manufacturability.</p>"},
+{q:"How do you think about tooling?",a:"<p>Tooling is a production asset. It needs to improve safety, repeatability, ergonomics, and quality while reducing variation.</p><p>Tooling decisions should always consider long-term production needs, not just immediate schedule pressure.</p>"},
+{q:"How do you approach Change Management?",a:"<p>Engineering changes are inevitable. The key is implementing them in a controlled way that minimizes disruption while maintaining product configuration and quality.</p><p>Good change management requires strong communication between engineering, manufacturing, quality, supply chain, and operations.</p>"},
+{q:"How do you develop engineers?",a:"<p>I develop engineers by giving them ownership, not just assignments.</p><p>I spend time understanding their strengths, identifying growth opportunities, and providing coaching rather than simply giving answers. Stretch assignments, mentoring, and constructive feedback are essential.</p><p>My success as a leader is measured by how many future leaders I help develop.</p>"},
+{q:"What makes a great manufacturing engineer?",a:"<p>Great manufacturing engineers combine technical expertise with curiosity, communication, and business understanding.</p><p>They don’t just solve today’s problem—they improve the system so the problem doesn’t happen again.</p>"},
+{q:"Production is behind. What do you do?",a:"<p>My first step is understanding why. I don’t make decisions from a conference room—I go to the floor.</p><p>Once the constraint is identified, I determine whether it’s related to engineering, materials, tooling, staffing, or execution.</p><p>Then I assemble the right cross-functional team, establish a recovery plan with clear ownership, and monitor progress daily. The objective isn’t simply recovering schedule; it’s preventing the issue from recurring.</p>"},
+{q:"Engineering disagrees with Operations. How do you handle it?",a:"<p>That’s healthy as long as it’s productive.</p><p>Engineering and Operations have different perspectives, but the same objective: delivering safe, high-quality hardware.</p><p>I bring both sides together around the facts, evaluate risks objectively, and make decisions based on what’s best for the program rather than what’s best for a single organization.</p>"},
+{q:"How do you create accountability?",a:"<p>Accountability starts with clarity. People can’t be accountable for expectations they don’t understand.</p><p>My role is to establish clear objectives, provide the resources needed to succeed, remove barriers, and then hold people accountable for results.</p><p>Accountability also applies to leaders. If my team isn’t successful, I first ask myself whether I’ve provided the direction, support, and environment they need.</p>"}
+];
+
+let i = 0, flipped = false;
+const card = document.getElementById('card');
+const qEl = document.getElementById('q');
+const aEl = document.getElementById('a');
+const prog = document.getElementById('prog');
+const fill = document.getElementById('fill');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+
+function show() {
+  const c = cards[i];
+  qEl.textContent = c.q;
+  aEl.innerHTML = c.a;
+  flipped = false;
+  card.classList.remove('flipped');
+  prog.textContent = (i+1) + ' / ' + cards.length;
+  fill.style.width = ((i+1)/cards.length*100) + '%';
+  prevBtn.disabled = i === 0;
+  nextBtn.disabled = i === cards.length-1;
+}
+
+function flip() {
+  flipped = !flipped;
+  card.classList.toggle('flipped', flipped);
+}
+
+card.onclick = flip;
+document.getElementById('flip').onclick = flip;
+prevBtn.onclick = () => { if(i>0){i--; show();} };
+nextBtn.onclick = () => { if(i<cards.length-1){i++; show();} };
+
+// Swipe
+let startX = 0;
+document.getElementById('stage').addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].screenX;
+}, {passive:true});
+document.getElementById('stage').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - startX;
+  if (Math.abs(dx) > 70) {
+    if (dx < 0 && i < cards.length-1) { i++; show(); }
+    if (dx > 0 && i > 0) { i--; show(); }
+  }
+}, {passive:true});
+
+// Keyboard
+document.onkeydown = e => {
+  if (e.key === 'ArrowRight') nextBtn.onclick();
+  if (e.key === 'ArrowLeft') prevBtn.onclick();
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+};
+
+show();
+</script>
+</body>
+</html>
